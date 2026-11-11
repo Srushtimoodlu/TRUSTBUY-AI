@@ -1,0 +1,23 @@
+[
+  {
+    "seller_id": "S001",
+    "seller_name": "Seller A",
+    "product_id": "P001",
+    "rating": 4.5,
+    "verified": true
+  },
+  {
+    "seller_id": "S002",
+    "seller_name": "Seller B",
+    "product_id": "P002",
+    "rating": 3.2,
+    "verified": false
+  },
+  {
+    "seller_id": "S003",
+    "seller_name": "Seller C",
+    "product_id": "P003",
+    "rating": 4.7,
+    "verified": true
+  }
+]

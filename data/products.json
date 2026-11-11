@@ -1,0 +1,38 @@
+[
+  {
+    "id": "P001",
+    "name": "Laptop A",
+    "category": "laptop",
+    "brand": "Brand A",
+    "price": 45000,
+    "ram": "16GB",
+    "storage": "512GB SSD",
+    "rating": 4.4,
+    "seller": "Seller A",
+    "stock": 8
+  },
+  {
+    "id": "P002",
+    "name": "Laptop B",
+    "category": "laptop",
+    "brand": "Brand B",
+    "price": 48000,
+    "ram": "8GB",
+    "storage": "512GB SSD",
+    "rating": 4.3,
+    "seller": "Seller B",
+    "stock": 0   
+  },
+  {
+    "id": "P003",
+    "name": "Laptop C",
+    "category": "laptop",
+    "brand": "Brand C",
+    "price": 55000,
+    "ram": "16GB",
+    "storage": "1TB SSD",
+    "rating": 4.6,
+    "seller": "Seller C",
+    "stock": 5
+  }
+]

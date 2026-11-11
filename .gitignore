@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+# TRUSTBUY AI
+data/users.json
+test-results.txt
+.venv/
+__pycache__/
+*.pyc

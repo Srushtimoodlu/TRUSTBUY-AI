@@ -1,0 +1,30 @@
+[
+  {
+    "review_id": "R001",
+    "product_id": "P001",
+    "customer": "Customer A",
+    "rating": 4.5,
+    "comment": "Good performance and battery life."
+  },
+  {
+    "review_id": "R002",
+    "product_id": "P001",
+    "customer": "Customer B",
+    "rating": 4.0,
+    "comment": "Good value for money."
+  },
+  {
+    "review_id": "R003",
+    "product_id": "P002",
+    "customer": "Customer C",
+    "rating": 3.5,
+    "comment": "Average performance."
+  },
+  {
+    "review_id": "R004",
+    "product_id": "P003",
+    "customer": "Customer D",
+    "rating": 4.8,
+    "comment": "Excellent storage and speed."
+  }
+]

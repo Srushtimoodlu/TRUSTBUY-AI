@@ -19,5 +19,103 @@
     "product_id": "P003",
     "rating": 4.7,
     "verified": true
+  },
+  {
+    "seller_id": "S004",
+    "seller_name": "Seller A",
+    "product_id": "P004",
+    "rating": 4.5,
+    "verified": true
+  },
+  {
+    "seller_id": "S005",
+    "seller_name": "Seller B",
+    "product_id": "P005",
+    "rating": 4.3,
+    "verified": true
+  },
+  {
+    "seller_id": "S006",
+    "seller_name": "Seller C",
+    "product_id": "P006",
+    "rating": 4.6,
+    "verified": true
+  },
+  {
+    "seller_id": "S007",
+    "seller_name": "Seller D",
+    "product_id": "P007",
+    "rating": 4.2,
+    "verified": true
+  },
+  {
+    "seller_id": "S008",
+    "seller_name": "Seller E",
+    "product_id": "P008",
+    "rating": 4.1,
+    "verified": true
+  },
+  {
+    "seller_id": "S009",
+    "seller_name": "Seller F",
+    "product_id": "P009",
+    "rating": 4.4,
+    "verified": true
+  },
+  {
+    "seller_id": "S010",
+    "seller_name": "Seller G",
+    "product_id": "P010",
+    "rating": 4.3,
+    "verified": true
+  },
+  {
+    "seller_id": "S011",
+    "seller_name": "Seller H",
+    "product_id": "P011",
+    "rating": 4.2,
+    "verified": true
+  },
+  {
+    "seller_id": "S012",
+    "seller_name": "Seller I",
+    "product_id": "P012",
+    "rating": 3.8,
+    "verified": false
+  },
+  {
+    "seller_id": "S013",
+    "seller_name": "Seller J",
+    "product_id": "P013",
+    "rating": 4.3,
+    "verified": true
+  },
+  {
+    "seller_id": "S014",
+    "seller_name": "Seller K",
+    "product_id": "P014",
+    "rating": 4.5,
+    "verified": true
+  },
+  {
+    "seller_id": "S015",
+    "seller_name": "Seller L",
+    "product_id": "P015",
+    "rating": 4.4,
+    "verified": true
+  },
+  {
+    "seller_id": "S016",
+    "seller_name": "Seller M",
+    "product_id": "P016",
+    "rating": 4.2,
+    "verified": true
+  },
+  {
+    "seller_id": "S017",
+    "seller_name": "Seller N",
+    "product_id": "P017",
+    "rating": 4.5,
+    "verified": true
   }
 ]

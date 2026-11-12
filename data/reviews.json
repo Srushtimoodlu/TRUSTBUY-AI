@@ -26,5 +26,104 @@
     "customer": "Customer D",
     "rating": 4.8,
     "comment": "Excellent storage and speed."
+  },
+  {
+    "review_id": "R005",
+    "product_id": "P004",
+    "customer": "Customer A",
+    "rating": 4.5,
+    "comment": "Good battery life and camera."
+  },
+  {
+    "review_id": "R006",
+    "product_id": "P005",
+    "customer": "Customer B",
+    "rating": 4.2,
+    "comment": "Smooth performance and good design."
+  },
+  
+  {
+    "review_id": "R007",
+    "product_id": "P006",
+    "customer": "Customer C",
+    "rating": 4.6,
+    "comment": "Excellent sound quality."
+  },
+  {
+    "review_id": "R008",
+    "product_id": "P007",
+    "customer": "Customer D",
+    "rating": 4.1,
+    "comment": "Comfortable headphones for daily use."
+  },
+  {
+    "review_id": "R009",
+    "product_id": "P008",
+    "customer": "Customer E",
+    "rating": 4.0,
+    "comment": "Useful features and good battery."
+  },
+  {
+    "review_id": "R010",
+    "product_id": "P009",
+    "customer": "Customer F",
+    "rating": 4.5,
+    "comment": "Good display and fitness tracking."
+  },
+  {
+    "review_id": "R011",
+    "product_id": "P010",
+    "customer": "Customer G",
+    "rating": 4.4,
+    "comment": "Good display and performance."
+  },
+  {
+    "review_id": "R012",
+    "product_id": "P011",
+    "customer": "Customer H",
+    "rating": 4.2,
+    "comment": "Good value for money."
+  },
+  {
+    "review_id": "R013",
+    "product_id": "P012",
+    "customer": "Customer I",
+    "rating": 3.5,
+    "comment": "Sound is good but battery could improve."
+  },
+  {
+    "review_id": "R014",
+    "product_id": "P013",
+    "customer": "Customer J",
+    "rating": 4.3,
+    "comment": "Clear sound and comfortable fit."
+  },
+  {
+    "review_id": "R015",
+    "product_id": "P014",
+    "customer": "Customer K",
+    "rating": 4.7,
+    "comment": "Clear display and good picture quality."
+  },
+  {
+    "review_id": "R016",
+    "product_id": "P015",
+    "customer": "Customer L",
+    "rating": 4.5,
+    "comment": "Great monitor for gaming."
+  },
+  {
+    "review_id": "R017",
+    "product_id": "P016",
+    "customer": "Customer M",
+    "rating": 4.2,
+    "comment": "Comfortable keys and good typing experience."
+  },
+  {
+    "review_id": "R018",
+    "product_id": "P017",
+    "customer": "Customer N",
+    "rating": 4.4,
+    "comment": "Easy to connect and use."
   }
 ]

@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 url = "http://127.0.0.1:5000/cart/add"
 
 data = {
-    "product_id": "P999",
+    "product_id": "P012",
     "quantity": 1
 }
 

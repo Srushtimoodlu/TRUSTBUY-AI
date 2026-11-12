@@ -5,7 +5,11 @@ from backend.filters import filter_by_budget
 from backend.category import filter_by_category
 from backend.inventory import check_stock
 from backend.comparison import compare_products
-from backend.trust_score import get_trust_data
+from backend.trust_score import (
+    get_trust_data,
+    calculate_trust_score,
+    load_json
+)
 
 
 class TestBackend(unittest.TestCase):
@@ -55,7 +59,44 @@ class TestBackend(unittest.TestCase):
         result = get_trust_data(self.products, reviews, "P001")
         self.assertIsNotNone(result)
         self.assertEqual(result["product_id"], "P001")
+    def test_trust_score_p004(self):
 
+        reviews = load_json("reviews.json")
+        sellers = load_json("sellers.json")
+
+        result = get_trust_data(
+            self.products, reviews, "P004", sellers
+        )
+
+        score = calculate_trust_score(result)
+
+        self.assertEqual(score, 91.8)
+
+
+    def test_trust_score_p012(self):
+
+        reviews = load_json("reviews.json")
+        sellers = load_json("sellers.json")
+
+        result = get_trust_data(
+            self.products, reviews, "P012", sellers
+        )
+
+        score = calculate_trust_score(result)
+
+        self.assertEqual(score, 53.5)
+
+
+    def test_trust_score_invalid_product(self):
+
+        reviews = load_json("reviews.json")
+        sellers = load_json("sellers.json")
+
+        result = get_trust_data(
+            self.products, reviews, "P999", sellers
+        )
+
+        self.assertIsNone(result)
 
 if __name__ == "__main__":
     unittest.main()

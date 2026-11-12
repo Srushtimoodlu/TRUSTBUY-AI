@@ -53,7 +53,37 @@ def get_trust_data(products, reviews, product_id, sellers=None):
 
     return trust_data
 
+def calculate_trust_score(trust_data):
 
+    product_score = (trust_data["product_rating"] / 5) * 30
+
+    seller_score = (trust_data["seller_data"]["rating"] / 5) * 25
+
+    verification_score = 20 if trust_data["seller_data"]["verified"] else 0
+
+    if trust_data["reviews"]:
+        total_rating = 0
+
+        for review in trust_data["reviews"]:
+            total_rating += review["rating"]
+
+        average_rating = total_rating / len(trust_data["reviews"])
+
+        review_score = (average_rating / 5) * 15
+    else:
+        review_score = 0
+
+    stock_score = 10 if trust_data["stock"] > 0 else 0
+
+    total_score = (
+        product_score
+        + seller_score
+        + verification_score
+        + review_score
+        + stock_score
+    )
+
+    return round(total_score, 2)
 if __name__ == "__main__":
 
     products = load_json("products.json")
@@ -69,5 +99,10 @@ if __name__ == "__main__":
     if result:
         print("\nProduct Trust Information:")
         print(json.dumps(result, indent=4))
+    
+        trust_score = calculate_trust_score(result)
+    
+        print("\nProduct Trust Score:", trust_score, "/ 100")
+    
     else:
         print("Product not found.")

@@ -10,6 +10,14 @@ from backend.trust_score import (
     calculate_trust_score,
     load_json
 )
+from backend.cart import (
+    add_to_cart,
+    remove_from_cart,
+    view_cart,
+    calculate_total
+)
+
+from backend.auth import register_user, login_user
 
 
 class TestBackend(unittest.TestCase):
@@ -121,6 +129,187 @@ class TestBackend(unittest.TestCase):
 
         self.assertEqual(result["review_count"], 0)
         self.assertEqual(score, 78.3)
+    def test_add_to_cart(self):
+
+        cart = {}
+
+        result = add_to_cart(
+            self.products,
+            cart,
+            "P004",
+            1
+        )
+
+        self.assertEqual(result, "Product added to cart")
+        self.assertEqual(cart["P004"], 1)
+    def test_remove_from_cart(self):
+
+        cart = {"P004": 1}
+
+        result = remove_from_cart(cart, "P004")
+
+        self.assertEqual(result, "Product removed from cart")
+        self.assertNotIn("P004", cart)
+    def test_view_cart(self):
+
+        cart = {"P004": 2}
+
+        result = view_cart(self.products, cart)
+
+        self.assertEqual(len(result), 1)
+        self.assertEqual(result[0]["name"], "Galaxy M15")
+        self.assertEqual(result[0]["quantity"], 2)
+    def test_calculate_cart_total(self):
+
+        cart = {"P004": 2}
+
+        result = calculate_total(self.products, cart)
+
+        self.assertEqual(result, 31998)
+    def test_add_to_cart_exceeds_stock(self):
+
+        cart = {}
+
+        result = add_to_cart(
+            self.products,
+            cart,
+            "P012",
+            1
+        )
+
+        self.assertEqual(result, "Not enough stock available")
+        self.assertNotIn("P012", cart)
+    def test_add_to_cart_invalid_quantity(self):
+
+        cart = {}
+
+        result = add_to_cart(
+            self.products,
+            cart,
+            "P004",
+            0
+        )
+
+        self.assertEqual(result, "Invalid quantity")
+        self.assertEqual(cart, {})
+    def test_remove_missing_product(self):
+
+        cart = {}
+
+        result = remove_from_cart(cart, "P004")
+
+        self.assertEqual(result, "Product not found in cart")
+        self.assertEqual(cart, {})
+
+    def test_register_invalid_password(self):
+
+        result = register_user(
+            "Test User",
+            "testuser@example.com",
+            "123"
+        )
+
+        self.assertEqual(
+            result,
+            "Enter valid details and a password of at least 8 characters"
+        )
+    def test_register_empty_name(self):
+
+        result = register_user(
+            "",
+            "emptyname@example.com",
+            "password123"
+        )
+
+        self.assertEqual(
+            result,
+            "Enter valid details and a password of at least 8 characters"
+        )
+    def test_register_empty_email(self):
+
+        result = register_user(
+            "Test User",
+            "",
+            "password123"
+        )
+
+        self.assertEqual(
+            result,
+            "Enter valid details and a password of at least 8 characters"
+        )
+    def test_successful_login(self):
+
+        import json
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+
+        with TemporaryDirectory() as temp_dir:
+
+            test_file = Path(temp_dir) / "users.json"
+            test_file.write_text("[]", encoding="utf-8")
+
+            with patch("backend.auth.DATA_FILE", test_file):
+
+                register_result = register_user(
+                    "Test User",
+                    "login_test@example.com",
+                    "password123"
+                )
+
+                login_result = login_user(
+                    "login_test@example.com",
+                    "password123"
+                )
+
+                self.assertEqual(register_result, "Registration successful")
+                self.assertEqual(login_result, "Login successful")
+
+    def test_incorrect_password(self):
+
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+
+        with TemporaryDirectory() as temp_dir:
+
+            test_file = Path(temp_dir) / "users.json"
+            test_file.write_text("[]", encoding="utf-8")
+
+            with patch("backend.auth.DATA_FILE", test_file):
+
+                register_user(
+                    "Test User",
+                    "wrongpass_test@example.com",
+                    "password123"
+                    )
+
+                result = login_user(
+                    "wrongpass_test@example.com",
+                    "wrongpassword"
+                )
+
+                self.assertEqual(result, "Incorrect password")
+    def test_login_unknown_user(self):
+
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from unittest.mock import patch
+
+        with TemporaryDirectory() as temp_dir:
+
+            test_file = Path(temp_dir) / "users.json"
+            test_file.write_text("[]", encoding="utf-8")
+
+            with patch("backend.auth.DATA_FILE", test_file):
+
+                result = login_user(
+                    "unknown@example.com",
+                    "password123"
+                )
+
+                self.assertEqual(result, "User not found")
+
 
 if __name__ == "__main__":
     unittest.main()

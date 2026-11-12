@@ -97,6 +97,18 @@ class TestBackend(unittest.TestCase):
         )
 
         self.assertIsNone(result)
+    def test_trust_score_missing_seller(self):
+
+        reviews = load_json("reviews.json")
+
+        result = get_trust_data(
+            self.products, reviews, "P004", []
+        )
+
+        score = calculate_trust_score(result)
+
+        self.assertIsNone(result["seller_data"])
+        self.assertEqual(score, 49.3)
 
 if __name__ == "__main__":
     unittest.main()

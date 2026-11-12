@@ -57,9 +57,19 @@ def calculate_trust_score(trust_data):
 
     product_score = (trust_data["product_rating"] / 5) * 30
 
-    seller_score = (trust_data["seller_data"]["rating"] / 5) * 25
+    if trust_data["seller_data"] is not None:
 
-    verification_score = 20 if trust_data["seller_data"]["verified"] else 0
+        seller_score = (
+        trust_data["seller_data"]["rating"] / 5
+        ) * 25
+
+        verification_score = (
+        20 if trust_data["seller_data"]["verified"] else 0
+        )
+
+    else:
+        seller_score = 0
+        verification_score = 0
 
     if trust_data["reviews"]:
         total_rating = 0

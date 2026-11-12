@@ -52,48 +52,67 @@ def get_trust_data(products, reviews, product_id, sellers=None):
     }
 
     return trust_data
+def validate_rating(rating):
+    if isinstance(rating, (int, float)) and not isinstance(rating, bool):
 
+        if 0 <= rating <= 5:
+            return rating
+
+    return 0
 def calculate_trust_score(trust_data):
 
-    product_score = (trust_data["product_rating"] / 5) * 30
+    product_rating = validate_rating(
+        trust_data["product_rating"]
+    )
+
+    product_score = (product_rating / 5) * 30
+
+    seller_score = 0
+    verification_score = 0
 
     if trust_data["seller_data"] is not None:
 
-        seller_score = (
-        trust_data["seller_data"]["rating"] / 5
-        ) * 25
-
-        verification_score = (
-        20 if trust_data["seller_data"]["verified"] else 0
+        seller_rating = validate_rating(
+            trust_data["seller_data"]["rating"]
         )
 
-    else:
-        seller_score = 0
-        verification_score = 0
+        seller_score = (seller_rating / 5) * 25
 
-    if trust_data["reviews"]:
-        total_rating = 0
+        verification_score = (
+            20 if trust_data["seller_data"]["verified"] else 0
+        )
 
-        for review in trust_data["reviews"]:
-            total_rating += review["rating"]
+    review_score = 0
 
-        average_rating = total_rating / len(trust_data["reviews"])
+    valid_ratings = []
+
+    for review in trust_data["reviews"]:
+
+        rating = review["rating"]
+
+        if isinstance(rating, (int, float)) and not isinstance(rating, bool):
+
+            if 0 <= rating <= 5:
+                valid_ratings.append(rating)
+
+    if valid_ratings:
+
+        average_rating = sum(valid_ratings) / len(valid_ratings)
 
         review_score = (average_rating / 5) * 15
-    else:
-        review_score = 0
 
     stock_score = 10 if trust_data["stock"] > 0 else 0
 
     total_score = (
         product_score
-        + seller_score
-        + verification_score
-        + review_score
-        + stock_score
+        +seller_score
+        +verification_score
+        +review_score
+        +stock_score
     )
 
     return round(total_score, 2)
+
 if __name__ == "__main__":
 
     products = load_json("products.json")

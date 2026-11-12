@@ -109,6 +109,18 @@ class TestBackend(unittest.TestCase):
 
         self.assertIsNone(result["seller_data"])
         self.assertEqual(score, 49.3)
+    def test_trust_score_no_reviews(self):
+
+        sellers = load_json("sellers.json")
+
+        result = get_trust_data(
+            self.products, [], "P004", sellers
+        )
+
+        score = calculate_trust_score(result)
+
+        self.assertEqual(result["review_count"], 0)
+        self.assertEqual(score, 78.3)
 
 if __name__ == "__main__":
     unittest.main()

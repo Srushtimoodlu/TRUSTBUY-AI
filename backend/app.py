@@ -36,6 +36,180 @@ def get_products():
     products = load_products()
 
     return jsonify(products)
+@app.route("/product")
+def get_product():
+
+    product_id = request.args.get("product_id", "")
+
+    if not product_id:
+        return jsonify({"error": "Please provide a product ID"}), 400
+
+    products = load_products()
+
+    for product in products:
+
+        if product["id"] == product_id:
+            return jsonify(product)
+
+    return jsonify({"error": "Product not found"}), 404
+
+@app.route("/products/count")
+def product_count():
+
+    products = load_products()
+
+    return jsonify({
+        "total_products": len(products)
+    })
+@app.route("/categories")
+def get_categories():
+
+    products = load_products()
+
+    categories = []
+
+    for product in products:
+
+        category = product["category"]
+
+        if category not in categories:
+            categories.append(category)
+
+    return jsonify({
+        "categories": sorted(categories)
+    })
+@app.route("/price-range")
+def price_range():
+
+    products = load_products()
+
+    prices = []
+
+    for product in products:
+        prices.append(product["price"])
+
+    return jsonify({
+        "minimum_price": min(prices),
+        "maximum_price": max(prices)
+    })
+
+@app.route("/reviews")
+def get_product_reviews():
+
+    product_id = request.args.get("product_id", "")
+
+    if not product_id:
+        return jsonify({"error": "Please provide a product ID"}), 400
+
+    products = load_products()
+
+    product_exists = False
+
+    for product in products:
+        if product["id"] == product_id:
+            product_exists = True
+            break
+
+    if not product_exists:
+        return jsonify({"error": "Product not found"}), 404
+
+    reviews = load_json("reviews.json")
+
+    result = []
+
+    for review in reviews:
+        if review["product_id"] == product_id:
+            result.append(review)
+
+    return jsonify({
+        "product_id": product_id,
+        "review_count": len(result),
+        "reviews": result
+    })
+@app.route("/seller")
+def get_seller():
+
+    product_id = request.args.get("product_id", "")
+
+    if not product_id:
+        return jsonify({"error": "Please provide a product ID"}), 400
+
+    products = load_products()
+
+    product_exists = False
+
+    for product in products:
+        if product["id"] == product_id:
+            product_exists = True
+            break
+
+    if not product_exists:
+        return jsonify({"error": "Product not found"}), 404
+
+    sellers = load_json("sellers.json")
+
+    for seller in sellers:
+        if seller["product_id"] == product_id:
+            return jsonify(seller)
+
+    return jsonify({"error": "Seller information not found"}), 404
+
+@app.route("/sort")
+def sort_products():
+
+    sort_order = request.args.get("order", "low-to-high")
+
+    products = load_products()
+
+    if sort_order == "low-to-high":
+
+        result = sorted(
+            products,
+            key=lambda product: product["price"]
+        )
+
+    elif sort_order == "high-to-low":
+
+        result = sorted(
+            products,
+            key=lambda product: product["price"],
+            reverse=True
+        )
+
+    else:
+        return jsonify({
+            "error": "Invalid sort order"
+        }), 400
+
+    return jsonify(result)
+@app.route("/products/page")
+def get_products_page():
+
+    page = request.args.get("page", 1, type=int)
+    limit = request.args.get("limit", 5, type=int)
+
+    if page < 1 or limit < 1:
+        return jsonify({
+            "error": "Page and limit must be positive numbers"
+        }), 400
+
+    products = load_products()
+
+    total_products = len(products)
+
+    start = (page - 1) * limit
+    end = start + limit
+
+    result = products[start:end]
+
+    return jsonify({
+        "page": page,
+        "limit": limit,
+        "total_products": total_products,
+        "total_pages": (total_products + limit - 1) // limit,
+        "products": result
+    })
+
 
 @app.route("/search")
 def search():
@@ -238,6 +412,13 @@ def login():
 
     return jsonify({
         "message": result
+    })
+@app.route("/health")
+def health_check():
+
+    return jsonify({
+        "status": "healthy",
+        "message": "TRUSTBUY AI Backend is working!"
     })
 if __name__ == "__main__":
     app.run(debug=True)

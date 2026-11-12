@@ -17,9 +17,11 @@ from backend.cart import (
     calculate_total
 )
 from backend.auth import register_user, login_user
+from flask_cors import CORS
 cart={}
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route("/")

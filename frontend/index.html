@@ -4,9 +4,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>TRUSTBUY AI | Smart Shopping Marketplace</title>
+
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
 <!-- HEADER -->
@@ -22,34 +25,38 @@
     </div>
 
     <div class="header-search">
-        <input id="searchInput"
-               placeholder="Search products, brands and more...">
+        <input
+            id="searchInput"
+            type="text"
+            placeholder="Search products, brands and more..."
+        >
+
         <button id="searchButton">Search</button>
     </div>
 
     <a href="#products" class="nav-link">Products</a>
+
     <a href="#comparison" class="nav-link">Compare</a>
+
     <a href="#cart" class="cart-link">
         🛒 Cart <b id="cartCount">0</b>
     </a>
 
-    <!-- LOGIN AND REGISTER -->
-    <div class="auth-nav">
-        <a href="login.html" class="login-nav">Login</a>
-        <a href="register.html" class="register-nav">Register</a>
-    </div>
-
 </header>
+
 
 <!-- CATEGORY NAVIGATION -->
 <nav class="category-nav">
+
     <a href="#products">All Products</a>
     <a href="#products">Mobiles</a>
     <a href="#products">Electronics</a>
     <a href="#products">Accessories</a>
     <a href="#products">Best Deals</a>
     <a href="#about">About TRUSTBUY</a>
+
 </nav>
+
 
 <main>
 
@@ -79,18 +86,24 @@
         </div>
 
         <div class="hero-visual">
+
             <div class="hero-circle">🛍️</div>
 
             <div class="trust-floating">
+
                 <span>🛡️</span>
+
                 <div>
                     <strong>Trust Evaluation</strong>
                     <small>Smarter shopping decisions</small>
                 </div>
+
             </div>
+
         </div>
 
     </section>
+
 
     <!-- BENEFITS -->
     <section class="benefits">
@@ -129,27 +142,38 @@
 
     </section>
 
-    <!-- PRODUCTS -->
+
+    <!-- PRODUCTS SECTION -->
     <section class="content-section" id="products">
 
         <div class="section-title">
+
             <div>
                 <span class="eyebrow">SHOP SMARTER</span>
+
                 <h2>Explore Products</h2>
+
                 <p>
                     Find the right product with intelligent shopping assistance.
                 </p>
             </div>
+
         </div>
 
+
+        <!-- BUDGET FILTER -->
         <div class="filter-bar">
 
-            <label for="budgetInput">Maximum budget</label>
+            <label for="budgetInput">
+                Maximum budget
+            </label>
 
-            <input type="number"
-                   id="budgetInput"
-                   placeholder="Enter ₹ amount"
-                   min="0">
+            <input
+                type="number"
+                id="budgetInput"
+                placeholder="Enter ₹ amount"
+                min="0"
+            >
 
             <button id="budgetButton">
                 Apply Filter
@@ -161,24 +185,36 @@
 
         </div>
 
+
         <p id="resultMessage" class="result-message">
             Search for a product to get started.
         </p>
 
+
+        <!-- PRODUCT CARDS -->
         <div id="productList" class="product-grid"></div>
 
     </section>
 
-    <!-- COMPARISON -->
-    <section class="content-section comparison-section"
-             id="comparison">
+
+    <!-- PRODUCT COMPARISON -->
+    <section
+        class="content-section comparison-section"
+        id="comparison"
+    >
 
         <div class="section-title">
+
             <div>
                 <span class="eyebrow">MAKE THE RIGHT CHOICE</span>
+
                 <h2>Product Comparison</h2>
-                <p>Compare up to three products side by side.</p>
+
+                <p>
+                    Compare up to three products side by side.
+                </p>
             </div>
+
         </div>
 
         <div id="comparisonContent" class="empty-panel">
@@ -187,15 +223,22 @@
 
     </section>
 
-    <!-- CART -->
+
+    <!-- SHOPPING CART -->
     <section class="content-section" id="cart">
 
         <div class="section-title">
+
             <div>
                 <span class="eyebrow">YOUR SHOPPING</span>
+
                 <h2>Shopping Cart</h2>
-                <p>Your selected products in one place.</p>
+
+                <p>
+                    Your selected products in one place.
+                </p>
             </div>
+
         </div>
 
         <div id="cartContent" class="empty-panel">
@@ -204,46 +247,70 @@
 
     </section>
 
-    <!-- ABOUT -->
+
+    <!-- ABOUT SECTION -->
     <section class="about-section" id="about">
 
         <div>
-            <span class="eyebrow">ABOUT OUR PROJECT</span>
 
-            <h2>Make Every Purchase a Confident One.</h2>
+            <span class="eyebrow">
+                ABOUT OUR PROJECT
+            </span>
+
+            <h2>
+                Make Every Purchase a Confident One.
+            </h2>
 
             <p>
                 TRUSTBUY AI is designed to assist shoppers with
                 product discovery, budget filtering, comparison,
                 seller information and trust-score evaluation.
             </p>
+
         </div>
 
-        <div class="about-icon">🛡️</div>
+        <div class="about-icon">
+            🛡️
+        </div>
 
     </section>
 
-    <!-- AI ASSISTANT -->
-    <section class="content-section" id="ai-assistant">
+
+    <!-- AI SHOPPING ASSISTANT -->
+    <section
+        class="content-section"
+        id="ai-assistant"
+    >
 
         <div class="section-title">
-            <div>
-                <span class="eyebrow">POWERED BY AI</span>
 
-                <h2>AI Shopping Assistant 🤖</h2>
+            <div>
+
+                <span class="eyebrow">
+                    POWERED BY AI
+                </span>
+
+                <h2>
+                    AI Shopping Assistant 🤖
+                </h2>
 
                 <p>
                     Tell us what you need.
                     Get intelligent shopping recommendations.
                 </p>
+
             </div>
+
         </div>
+
 
         <div class="ai-panel">
 
-            <textarea id="aiQuery"
-                      placeholder="Example: Suggest a good Samsung phone under ₹30000"
-                      rows="3"></textarea>
+            <textarea
+                id="aiQuery"
+                placeholder="Example: Suggest a good Samsung phone under ₹30000"
+                rows="3"
+            ></textarea>
 
             <button id="aiButton">
                 Get AI Recommendations →
@@ -259,6 +326,7 @@
 
 </main>
 
+
 <!-- FOOTER -->
 <footer>
 
@@ -266,12 +334,18 @@
         TRUSTBUY<span>AI</span>
     </a>
 
-    <p>Shop Smart. Compare Better. Buy with Confidence.</p>
+    <p>
+        Shop Smart. Compare Better. Buy with Confidence.
+    </p>
 
-    <small>AGENTX 2026 | TRUSTBUY AI Project</small>
+    <small>
+        AGENTX 2026 | TRUSTBUY AI Project
+    </small>
 
 </footer>
 
+
+<!-- JAVASCRIPT -->
 <script src="script.js"></script>
 
 </body>

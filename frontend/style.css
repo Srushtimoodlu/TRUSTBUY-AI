@@ -1,4 +1,8 @@
 
+/* =====================================
+   TRUSTBUY AI - COMPLETE STYLESHEET
+===================================== */
+
 :root {
     --navy: #142b46;
     --green: #159765;
@@ -49,7 +53,8 @@ button:disabled {
     cursor: not-allowed;
 }
 
-input {
+input, select, textarea {
+    font: inherit;
     padding: 12px;
     border: 1px solid var(--border);
     border-radius: 7px;
@@ -57,7 +62,7 @@ input {
     min-width: 0;
 }
 
-input:focus {
+input:focus, select:focus, textarea:focus {
     border-color: var(--green);
 }
 
@@ -120,6 +125,40 @@ input:focus {
 .cart-link {
     color: var(--green);
     font-weight: bold;
+}
+
+/* LOGIN AND REGISTER NAVIGATION */
+
+.auth-nav {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.login-nav {
+    color: var(--navy);
+    font-weight: bold;
+    font-size: 13px;
+    padding: 10px 15px;
+    border: 1px solid var(--green);
+    border-radius: 7px;
+}
+
+.login-nav:hover {
+    background: #eaf7ef;
+}
+
+.register-nav {
+    color: white;
+    background: var(--green);
+    font-weight: bold;
+    font-size: 13px;
+    padding: 10px 15px;
+    border-radius: 7px;
+}
+
+.register-nav:hover {
+    background: #107c52;
 }
 
 /* CATEGORY NAV */
@@ -537,7 +576,250 @@ footer small {
     color: #bdcbd8;
 }
 
-/* RESPONSIVE */
+/* AI ASSISTANT */
+
+.ai-panel {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px;
+}
+
+.ai-panel textarea {
+    width: 100%;
+    padding: 15px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font: inherit;
+    resize: vertical;
+    margin-bottom: 12px;
+}
+
+.ai-result {
+    margin-top: 22px;
+    background: transparent;
+    padding: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.ai-heading {
+    color: var(--navy);
+    margin-bottom: 8px;
+}
+
+.ai-summary {
+    color: var(--muted);
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.ai-product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 18px;
+}
+
+.ai-product-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 15px #142b4610;
+}
+
+.ai-product-icon {
+    height: 110px;
+    background: #edf4f1;
+    display: grid;
+    place-items: center;
+    font-size: 55px;
+    border-radius: 9px;
+    margin-bottom: 15px;
+}
+
+.ai-product-card h3 {
+    color: var(--navy);
+    font-size: 18px;
+}
+
+.ai-price {
+    color: var(--green);
+    font-size: 25px;
+    font-weight: 800;
+    margin: 8px 0;
+}
+
+.ai-detail {
+    color: var(--muted);
+    font-size: 13px;
+    margin: 5px 0;
+}
+
+.ai-stock {
+    padding: 7px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    margin: 12px 0;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.ai-available {
+    background: #e4f6ec;
+    color: var(--green);
+}
+
+.ai-unavailable {
+    background: #ffe8e8;
+    color: #c03939;
+}
+
+.ai-action {
+    width: 100%;
+    margin-top: 9px;
+}
+
+.ai-trust {
+    background: var(--navy);
+}
+
+.ai-stock-button {
+    background: var(--green);
+}
+
+.ai-verification {
+    background: #f1f6f9;
+    border-radius: 7px;
+    padding: 10px;
+    font-size: 13px;
+    margin-top: 10px;
+    color: var(--navy);
+}
+
+.ai-insight {
+    background: #e9f6ef;
+    border-left: 4px solid var(--green);
+    padding: 15px;
+    border-radius: 7px;
+    margin-top: 20px;
+    color: #176b49;
+}
+
+/* LOGIN AND REGISTRATION */
+
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 25px;
+    background: linear-gradient(135deg, #142b46, #245b62);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 440px;
+    background: white;
+    padding: 38px;
+    border-radius: 16px;
+    box-shadow: 0 15px 45px #0003;
+}
+
+.auth-container .brand {
+    display: block;
+    text-align: center;
+    font-size: 27px;
+    margin-bottom: 18px;
+}
+
+.auth-icon {
+    font-size: 48px;
+    text-align: center;
+    margin: 10px 0;
+}
+
+.auth-container h1 {
+    text-align: center;
+    color: var(--navy);
+    margin-bottom: 5px;
+}
+
+.auth-container > p {
+    text-align: center;
+    color: var(--muted);
+    margin-bottom: 20px;
+}
+
+.auth-container form {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+
+.auth-container label {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--text);
+}
+
+.auth-container input {
+    width: 100%;
+    padding: 13px;
+    border: 1px solid #dce3e9;
+    border-radius: 7px;
+}
+
+.auth-container input:focus {
+    border-color: var(--green);
+}
+
+.auth-container button {
+    width: 100%;
+    margin-top: 12px;
+    padding: 14px;
+    background: var(--green);
+    font-size: 14px;
+}
+
+.auth-container button:hover {
+    background: #107c52;
+}
+
+.auth-message {
+    font-size: 13px;
+    margin-top: 15px;
+    text-align: center;
+}
+
+.auth-switch {
+    text-align: center;
+    font-size: 13px;
+    margin-top: 22px;
+    color: var(--muted);
+}
+
+.auth-switch a {
+    color: var(--green);
+    font-weight: bold;
+}
+
+.back-home {
+    display: block;
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    color: var(--navy);
+}
+
+/* CATEGORY SELECT */
+
+#categorySelect {
+    min-width: 180px;
+    background: white;
+}
+
+/* RESPONSIVE DESIGN */
 
 @media (max-width: 1050px) {
     .product-grid {
@@ -575,9 +857,14 @@ footer small {
     .product-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+
+    .auth-nav {
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
 
-@media (max-width: 450px) {
+@media (max-width: 480px) {
     .product-grid {
         grid-template-columns: 1fr;
     }
@@ -606,142 +893,8 @@ footer small {
     .content-section {
         padding: 38px 15px;
     }
-}
 
-.ai-panel {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 22px;
-}
-
-.ai-panel textarea {
-    width: 100%;
-    padding: 15px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font: inherit;
-    resize: vertical;
-    margin-bottom: 12px;
-}
-
-.ai-result {
-    margin-top: 18px;
-    padding: 15px;
-    background: #f4f7fa;
-    border-radius: 8px;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-
-/* AI RECOMMENDATION DESIGN */
-
-.ai-result {
-    margin-top: 22px;
-    background: transparent;
-    padding: 0;
-    white-space: normal;
-}
-
-.ai-heading {
-    color: #142b46;
-    margin-bottom: 8px;
-}
-
-.ai-summary {
-    color: #738195;
-    font-size: 14px;
-    margin-bottom: 20px;
-}
-
-.ai-product-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 18px;
-}
-
-.ai-product-card {
-    background: white;
-    padding: 20px;
-    border-radius: 12px;
-    border: 1px solid #e5eaf0;
-    box-shadow: 0 4px 15px #142b4610;
-}
-
-.ai-product-icon {
-    height: 110px;
-    background: #edf4f1;
-    display: grid;
-    place-items: center;
-    font-size: 55px;
-    border-radius: 9px;
-    margin-bottom: 15px;
-}
-
-.ai-product-card h3 {
-    color: #142b46;
-    font-size: 18px;
-}
-
-.ai-price {
-    color: #159765;
-    font-size: 25px;
-    font-weight: 800;
-    margin: 8px 0;
-}
-
-.ai-detail {
-    color: #738195;
-    font-size: 13px;
-    margin: 5px 0;
-}
-
-.ai-stock {
-    padding: 7px 10px;
-    border-radius: 6px;
-    display: inline-block;
-    margin: 12px 0;
-    font-size: 12px;
-    font-weight: bold;
-}
-
-.ai-available {
-    background: #e4f6ec;
-    color: #159765;
-}
-
-.ai-unavailable {
-    background: #ffe8e8;
-    color: #c03939;
-}
-
-.ai-action {
-    width: 100%;
-    margin-top: 9px;
-}
-
-.ai-trust {
-    background: #142b46;
-}
-
-.ai-stock-button {
-    background: #159765;
-}
-
-.ai-verification {
-    background: #f1f6f9;
-    border-radius: 7px;
-    padding: 10px;
-    font-size: 13px;
-    margin-top: 10px;
-    color: #142b46;
-}
-
-.ai-insight {
-    background: #e9f6ef;
-    border-left: 4px solid #159765;
-    padding: 15px;
-    border-radius: 7px;
-    margin-top: 20px;
-    color: #176b49;
+    .auth-container {
+        padding: 25px 20px;
+    }
 }

@@ -6,441 +6,85 @@ const searchButton = document.getElementById("searchButton");
 const productList = document.getElementById("productList");
 const resultMessage = document.getElementById("resultMessage");
 
-const budgetInput = document.getElementById("budgetInput");
-const budgetButton = document.getElementById("budgetButton");
-const clearButton = document.getElementById("clearButton");
-
-const comparisonContent = document.getElementById("comparisonContent");
-const cartContent = document.getElementById("cartContent");
-const cartCount = document.getElementById("cartCount");
-
-let products = [];
-let filteredProducts = [];
-let comparedProducts = [];
+let allProducts = [];
+let comparisonProducts = [];
 let cart = [];
 
-function makeElement(tag, className, value) {
-    const el = document.createElement(tag);
-    if (className) el.className = className;
-    if (value !== undefined) el.textContent = String(value);
-    return el;
+// BASIC HELPERS
+
+function makeElement(tag, className = "", content = "") {
+    const element = document.createElement(tag);
+    element.className = className;
+    element.textContent = content;
+    return element;
 }
 
 function productEmoji(product) {
-    const category = String(product.category || "").toLowerCase();
-    const name = String(product.name || "").toLowerCase();
+    const name = (product.name || "").toLowerCase();
 
-    if (category.includes("mobile") || name.includes("galaxy") ||
-        name.includes("phone") || name.includes("iphone")) return "📱";
+    if (name.includes("phone") || name.includes("galaxy") ||
+        name.includes("iphone")) return "📱";
 
-    if (category.includes("laptop") || name.includes("laptop")) return "💻";
-    if (category.includes("audio") || name.includes("headphone")) return "🎧";
-    if (category.includes("watch") || name.includes("watch")) return "⌚";
-    if (category.includes("camera")) return "📷";
-    if (category.includes("tv")) return "📺";
+    if (name.includes("laptop")) return "💻";
+    if (name.includes("headphone")) return "🎧";
+    if (name.includes("watch")) return "⌚";
 
     return "🛍️";
 }
 
-function addInfo(container, label, value) {
-    container.appendChild(
-        makeElement("p", "", `${label}: ${value}`)
-    );
+async function apiRequest(url, options = {}) {
+    const response = await fetch(url, options);
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.message || data.error || "Request failed"
+        );
+    }
+
+    return data;
 }
 
-// SEARCH
+// 1. PRODUCT SEARCH
 
 async function searchProducts() {
     const keyword = searchInput.value.trim();
 
     if (!keyword) {
         resultMessage.textContent = "Please enter a product name.";
+        productList.replaceChildren();
         return;
     }
 
     searchButton.disabled = true;
-    productList.replaceChildren();
-    resultMessage.textContent = "Finding products...";
+    searchButton.textContent = "Searching...";
 
     try {
-        const response = await fetch(
+        const products = await apiRequest(
             `${API_URL}/search?keyword=${encodeURIComponent(keyword)}`
         );
 
-        if (!response.ok) throw new Error("Search failed.");
-
-        const data = await response.json();
-
-        if (!Array.isArray(data)) {
-            throw new Error("Invalid product response.");
+        if (!Array.isArray(products)) {
+            throw new Error("Unexpected product response from server.");
         }
 
-        products = data;
-        filteredProducts = [...products];
-        comparedProducts = [];
+        allProducts = products;
+        renderProducts(allProducts);
 
-        renderComparison();
-        renderProducts();
+        resultMessage.textContent =
+            `${allProducts.length} products found for "${keyword}".`;
 
     } catch (error) {
-        resultMessage.textContent =
-            "Unable to connect to backend. Check whether Flask is running.";
+        productList.replaceChildren();
+        resultMessage.textContent = error.message;
         console.error(error);
+
     } finally {
         searchButton.disabled = false;
+        searchButton.textContent = "Search";
     }
 }
-
-// DISPLAY PRODUCTS
-
-function renderProducts() {
-    productList.replaceChildren();
-
-    if (filteredProducts.length === 0) {
-        resultMessage.textContent = "No products found.";
-        return;
-    }
-
-    resultMessage.textContent =
-        `${filteredProducts.length} products found.`;
-
-    filteredProducts.forEach(product => {
-        const card = makeElement("article", "product-card");
-
-        card.appendChild(
-            makeElement("div", "product-image", productEmoji(product))
-        );
-
-        card.appendChild(
-            makeElement("h3", "", product.name || "Product")
-        );
-
-        addInfo(card, "Product ID", product.id ?? "N/A");
-        addInfo(card, "Brand", product.brand ?? "N/A");
-
-        card.appendChild(
-            makeElement(
-                "p",
-                "product-price",
-                `₹${product.price ?? "N/A"}`
-            )
-        );
-
-        addInfo(card, "Rating", `${product.rating ?? "N/A"} / 5`);
-
-        const stock = Number(product.stock) > 0;
-
-        card.appendChild(
-            makeElement(
-                "p",
-                stock ? "stock-good" : "stock-bad",
-                stock ? "✓ In Stock" : "✕ Out of Stock"
-            )
-        );
-
-        const actions = makeElement("div", "product-actions");
-
-        const compareButton = makeElement(
-            "button",
-            "light-button",
-            comparedProducts.some(p => p.id === product.id)
-                ? "Selected ✓"
-                : "Compare"
-        );
-
-        compareButton.addEventListener("click", () => {
-            toggleCompare(product);
-        });
-
-        actions.appendChild(compareButton);
-
-        const cartButton = makeElement(
-            "button",
-            "",
-            "Add to Cart"
-        );
-
-        cartButton.disabled = !stock;
-
-        cartButton.addEventListener("click", () => {
-            addToCart(product);
-        });
-
-        actions.appendChild(cartButton);
-        card.appendChild(actions);
-
-        const trustButton = makeElement(
-            "button",
-            "trust-button",
-            "🛡 Check Trust Score"
-        );
-
-        trustButton.addEventListener("click", () => {
-            checkTrustScore(product, card, trustButton);
-        });
-
-        card.appendChild(trustButton);
-
-        productList.appendChild(card);
-    });
-}
-
-// TRUST SCORE
-
-async function checkTrustScore(product, card, button) {
-    button.disabled = true;
-    button.textContent = "Checking...";
-
-    try {
-        const response = await fetch(
-            `${API_URL}/trust-score?product_id=${encodeURIComponent(product.id)}`
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            throw new Error(data.error || data.message || "Trust score unavailable");
-        }
-
-        const score = Number(data.trust_score);
-
-        if (!Number.isFinite(score) || score < 0 || score > 100) {
-            throw new Error("Invalid trust score returned by backend.");
-        }
-
-        const result = makeElement(
-            "div",
-            "trust-result",
-            `🛡 Trust Score: ${score}/100`
-        );
-
-        const oldResult = card.querySelector(".trust-result");
-        if (oldResult) oldResult.remove();
-
-        card.appendChild(result);
-
-        button.textContent = "✓ Trust Score Checked";
-
-    } catch (error) {
-        alert(error.message);
-        button.textContent = "🛡 Check Trust Score";
-        console.error(error);
-    } finally {
-        button.disabled = false;
-    }
-}
-
-// BUDGET FILTER
-
-budgetButton.addEventListener("click", () => {
-    const value = budgetInput.value;
-
-    if (value.trim() === "" || !Number.isFinite(Number(value)) ||
-        Number(value) < 0) {
-        resultMessage.textContent = "Enter a valid budget.";
-        return;
-    }
-
-    const budget = Number(value);
-
-    filteredProducts = products.filter(product => {
-        return Number.isFinite(Number(product.price)) &&
-            Number(product.price) <= budget;
-    });
-
-    renderProducts();
-});
-
-clearButton.addEventListener("click", () => {
-    budgetInput.value = "";
-    filteredProducts = [...products];
-    renderProducts();
-});
-
-// COMPARISON
-
-function toggleCompare(product) {
-    const exists = comparedProducts.some(p => p.id === product.id);
-
-    if (exists) {
-        comparedProducts = comparedProducts.filter(
-            p => p.id !== product.id
-        );
-    } else {
-        if (comparedProducts.length >= 3) {
-            alert("You can compare up to 3 products.");
-            return;
-        }
-
-        comparedProducts.push(product);
-    }
-
-    renderProducts();
-    renderComparison();
-}
-
-function renderComparison() {
-    comparisonContent.replaceChildren();
-
-    if (comparedProducts.length === 0) {
-        comparisonContent.textContent =
-            "Select products to compare.";
-        return;
-    }
-
-    const table = document.createElement("table");
-    const header = document.createElement("tr");
-
-    header.appendChild(makeElement("th", "", "Feature"));
-
-    comparedProducts.forEach(product => {
-        header.appendChild(
-            makeElement("th", "", product.name)
-        );
-    });
-
-    table.appendChild(header);
-
-    const fields = [
-        ["Brand", "brand"],
-        ["Price", "price"],
-        ["Rating", "rating"],
-        ["Stock", "stock"]
-    ];
-
-    fields.forEach(([label, key]) => {
-        const row = document.createElement("tr");
-        row.appendChild(makeElement("td", "", label));
-
-        comparedProducts.forEach(product => {
-            let value = product[key] ?? "N/A";
-
-            if (key === "price") value = `₹${value}`;
-
-            if (key === "stock") {
-                value = Number(value) > 0
-                    ? "Available"
-                    : "Out of stock";
-            }
-
-            row.appendChild(makeElement("td", "", value));
-        });
-
-        table.appendChild(row);
-    });
-
-    comparisonContent.appendChild(table);
-
-    const clear = makeElement(
-        "button",
-        "light-button",
-        "Clear Comparison"
-    );
-
-    clear.style.marginTop = "15px";
-
-    clear.addEventListener("click", () => {
-        comparedProducts = [];
-        renderProducts();
-        renderComparison();
-    });
-
-    comparisonContent.appendChild(clear);
-}
-
-// CART
-
-function addToCart(product) {
-    if (Number(product.stock) <= 0) {
-        alert("Product is out of stock.");
-        return;
-    }
-
-    const existing = cart.find(p => p.id === product.id);
-
-    if (existing) {
-        if (existing.quantity >= Number(product.stock)) {
-            alert("Maximum available stock reached.");
-            return;
-        }
-
-        existing.quantity++;
-    } else {
-        cart.push({...product, quantity: 1});
-    }
-
-    renderCart();
-    alert("Product added to cart!");
-}
-
-function removeFromCart(id) {
-    cart = cart.filter(p => p.id !== id);
-    renderCart();
-}
-
-function renderCart() {
-    cartContent.replaceChildren();
-
-    const count = cart.reduce(
-        (total, item) => total + item.quantity, 0
-    );
-
-    cartCount.textContent = count;
-
-    if (cart.length === 0) {
-        cartContent.textContent = "Your cart is empty.";
-        return;
-    }
-
-    let total = 0;
-
-    cart.forEach(product => {
-        const price = Number(product.price) || 0;
-        total += price * product.quantity;
-
-        const item = makeElement("div", "cart-item");
-        const details = document.createElement("div");
-
-        details.appendChild(
-            makeElement("strong", "", product.name)
-        );
-
-        addInfo(details, "Price", `₹${price}`);
-        addInfo(details, "Quantity", product.quantity);
-
-        const remove = makeElement(
-            "button",
-            "remove-button",
-            "Remove"
-        );
-
-        remove.addEventListener("click", () => {
-            removeFromCart(product.id);
-        });
-
-        item.appendChild(details);
-        item.appendChild(remove);
-        cartContent.appendChild(item);
-    });
-
-    cartContent.appendChild(
-        makeElement(
-            "p",
-            "cart-total",
-            `Total: ₹${total.toFixed(2)}`
-        )
-    );
-
-    cartContent.appendChild(
-        makeElement(
-            "p",
-            "",
-            "Demo cart only. No actual payment is processed."
-        )
-    );
-}
-
-// EVENTS
 
 searchButton.addEventListener("click", searchProducts);
 
@@ -448,8 +92,292 @@ searchInput.addEventListener("keydown", event => {
     if (event.key === "Enter") searchProducts();
 });
 
-renderComparison();
-renderCart();
+// 2. DISPLAY PRODUCT CARDS
+
+function renderProducts(products) {
+    productList.replaceChildren();
+
+    if (products.length === 0) {
+        productList.appendChild(
+            makeElement("p", "", "No products found.")
+        );
+        return;
+    }
+
+    products.forEach(product => {
+        const card = makeElement("div", "product-card");
+
+        card.appendChild(
+            makeElement("div", "product-image", productEmoji(product))
+        );
+
+        card.appendChild(
+            makeElement("h3", "", product.name || "Unnamed product")
+        );
+
+        card.appendChild(
+            makeElement("p", "", `Product ID: ${product.id}`)
+        );
+
+        card.appendChild(
+            makeElement("p", "", `Brand: ${product.brand || "N/A"}`)
+        );
+
+        card.appendChild(
+            makeElement("p", "product-price", `₹${product.price}`)
+        );
+
+        card.appendChild(
+            makeElement("p", "", `Rating: ${product.rating ?? "N/A"} / 5`)
+        );
+
+        const inStock = Number(product.stock) > 0;
+
+        card.appendChild(
+            makeElement(
+                "p",
+                inStock ? "stock-good" : "stock-bad",
+                inStock ? "✓ Available" : "✕ Out of stock"
+            )
+        );
+
+        // TRUST SCORE
+
+        const trustButton = makeElement(
+            "button",
+            "trust-button",
+            "🛡 Check Trust Score"
+        );
+
+        const trustResult = makeElement("div", "trust-result", "");
+        trustResult.hidden = true;
+
+        trustButton.addEventListener("click", async () => {
+            trustButton.disabled = true;
+            trustButton.textContent = "Calculating...";
+
+            try {
+                const data = await apiRequest(
+                    `${API_URL}/trust-score?product_id=${encodeURIComponent(product.id)}`
+                );
+
+                trustResult.hidden = false;
+                trustResult.textContent =
+                    `${data.name || product.name}: ${data.trust_score}/100`;
+
+            } catch (error) {
+                trustResult.hidden = false;
+                trustResult.textContent = error.message;
+
+            } finally {
+                trustButton.disabled = false;
+                trustButton.textContent = "🛡 Check Trust Score";
+            }
+        });
+
+        card.append(trustButton, trustResult);
+
+        // COMPARISON AND CART BUTTONS
+
+        const actions = makeElement("div", "product-actions");
+
+        const compareButton = makeElement(
+            "button",
+            "",
+            "⚖ Compare"
+        );
+
+        compareButton.addEventListener("click", () => {
+            addToComparison(product);
+        });
+
+        const cartButton = makeElement(
+            "button",
+            "",
+            "🛒 Add to Cart"
+        );
+
+        cartButton.addEventListener("click", () => {
+            addToCart(product);
+        });
+
+        actions.append(compareButton, cartButton);
+        card.appendChild(actions);
+
+        productList.appendChild(card);
+    });
+}
+
+// 3. BUDGET FILTER
+
+document.getElementById("budgetButton").addEventListener("click", () => {
+    const budgetInput = document.getElementById("budgetInput");
+    const budget = Number(budgetInput.value);
+
+    if (budgetInput.value.trim() === "" || budget < 0) {
+        resultMessage.textContent = "Enter a valid budget.";
+        return;
+    }
+
+    const filtered = allProducts.filter(
+        product => Number(product.price) <= budget
+    );
+
+    renderProducts(filtered);
+
+    resultMessage.textContent =
+        `${filtered.length} products available within ₹${budget}.`;
+});
+
+document.getElementById("clearButton").addEventListener("click", () => {
+    document.getElementById("budgetInput").value = "";
+    renderProducts(allProducts);
+
+    resultMessage.textContent =
+        `${allProducts.length} products displayed.`;
+});
+
+// 4. PRODUCT COMPARISON
+
+function addToComparison(product) {
+    if (comparisonProducts.some(p => p.id === product.id)) {
+        alert("This product is already selected.");
+        return;
+    }
+
+    if (comparisonProducts.length >= 3) {
+        alert("You can compare only three products at a time.");
+        return;
+    }
+
+    comparisonProducts.push(product);
+    renderComparison();
+}
+
+function renderComparison() {
+    const container = document.getElementById("comparisonContent");
+    container.replaceChildren();
+
+    if (comparisonProducts.length === 0) {
+        container.textContent = "Select products to compare.";
+        return;
+    }
+
+    const table = document.createElement("table");
+
+    const rows = [
+        ["Product", p => p.name],
+        ["Brand", p => p.brand],
+        ["Price", p => `₹${p.price}`],
+        ["Rating", p => `${p.rating} / 5`],
+        ["Stock", p => Number(p.stock) > 0 ? "Available" : "Out of stock"]
+    ];
+
+    rows.forEach(([label, getter]) => {
+        const tr = document.createElement("tr");
+        const heading = makeElement("th", "", label);
+        tr.appendChild(heading);
+
+        comparisonProducts.forEach(product => {
+            const cell = makeElement("td", "", getter(product));
+            tr.appendChild(cell);
+        });
+
+        table.appendChild(tr);
+    });
+
+    container.appendChild(table);
+
+    const clearButton = makeElement(
+        "button",
+        "light-button",
+        "Clear Comparison"
+    );
+
+    clearButton.addEventListener("click", () => {
+        comparisonProducts = [];
+        renderComparison();
+    });
+
+    container.appendChild(clearButton);
+}
+
+// 5. SHOPPING CART
+
+function addToCart(product) {
+    if (Number(product.stock) <= 0) {
+        alert("Sorry, this product is out of stock.");
+        return;
+    }
+
+    const existing = cart.find(item => item.id === product.id);
+
+    if (existing) {
+        existing.quantity++;
+    } else {
+        cart.push({ ...product, quantity: 1 });
+    }
+
+    renderCart();
+}
+
+function removeFromCart(productId) {
+    cart = cart.filter(item => item.id !== productId);
+    renderCart();
+}
+
+function renderCart() {
+    const container = document.getElementById("cartContent");
+    container.replaceChildren();
+
+    const count = cart.reduce(
+        (total, item) => total + item.quantity, 0
+    );
+
+    document.getElementById("cartCount").textContent = count;
+
+    if (cart.length === 0) {
+        container.textContent = "Your cart is empty.";
+        return;
+    }
+
+    let total = 0;
+
+    cart.forEach(item => {
+        const itemTotal = Number(item.price) * item.quantity;
+        total += itemTotal;
+
+        const row = makeElement("div", "cart-item");
+        const details = makeElement("div");
+
+        details.appendChild(
+            makeElement("strong", "", item.name)
+        );
+
+        details.appendChild(
+            makeElement("p", "", `₹${item.price} × ${item.quantity}`)
+        );
+
+        const removeButton = makeElement(
+            "button",
+            "remove-button",
+            "Remove"
+        );
+
+        removeButton.addEventListener("click", () => {
+            removeFromCart(item.id);
+        });
+
+        row.append(details, removeButton);
+        container.appendChild(row);
+    });
+
+    container.appendChild(
+        makeElement("p", "cart-total", `Total: ₹${total.toFixed(2)}`)
+    );
+}
+
+// 6. AI SHOPPING RECOMMENDATIONS
 
 const aiButton = document.getElementById("aiButton");
 
@@ -463,29 +391,88 @@ aiButton.addEventListener("click", async () => {
     }
 
     aiButton.disabled = true;
-    aiButton.textContent = "Thinking...";
+    aiButton.textContent = "Finding products...";
+    result.textContent = "Searching for recommendations...";
 
     try {
-        const response = await fetch(`${API_URL}/recommend`, {
+        const data = await apiRequest(`${API_URL}/recommend`, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ query })
         });
 
-        const data = await response.json();
+        result.replaceChildren();
 
-        if (!response.ok) {
-            throw new Error(data.error || "AI recommendation failed.");
+        result.appendChild(
+            makeElement("h2", "ai-heading", "🤖 Your Recommendations")
+        );
+
+        const recommendations = data.recommendations || [];
+
+        result.appendChild(
+            makeElement(
+                "p",
+                "ai-summary",
+                `${recommendations.length} matching products found.`
+            )
+        );
+
+        if (recommendations.length === 0) {
+            result.appendChild(
+                makeElement("p", "", "No matching products found.")
+            );
+            return;
         }
 
-        result.textContent = JSON.stringify(data, null, 2);
+        const grid = makeElement("div", "ai-product-grid");
+
+        recommendations.forEach(product => {
+            const card = makeElement("div", "ai-product-card");
+
+            card.appendChild(
+                makeElement("div", "ai-product-icon", productEmoji(product))
+            );
+
+            card.appendChild(
+                makeElement("h3", "", product.name)
+            );
+
+            card.appendChild(
+                makeElement("p", "ai-price", `₹${product.price}`)
+            );
+
+            card.appendChild(
+                makeElement("p", "ai-detail", `Brand: ${product.brand || "N/A"}`)
+            );
+
+            card.appendChild(
+                makeElement("p", "ai-detail", `Rating: ${product.rating ?? "N/A"} / 5`)
+            );
+
+            card.appendChild(
+                makeElement(
+                    "p",
+                    Number(product.stock) > 0 ? "stock-good" : "stock-bad",
+                    Number(product.stock) > 0 ? "Available" : "Out of stock"
+                )
+            );
+
+            grid.appendChild(card);
+        });
+
+        result.appendChild(grid);
 
     } catch (error) {
         result.textContent = error.message;
+        console.error(error);
+
     } finally {
         aiButton.disabled = false;
         aiButton.textContent = "Get AI Recommendations →";
     }
 });
+
+renderCart();
+renderComparison();
+
+console.log("TRUSTBUY AI frontend initialized.");

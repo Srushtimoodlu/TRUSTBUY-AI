@@ -1,478 +1,598 @@
-
 const API_URL = "http://127.0.0.1:5000";
 
-const searchInput = document.getElementById("searchInput");
-const searchButton = document.getElementById("searchButton");
-const productList = document.getElementById("productList");
-const resultMessage = document.getElementById("resultMessage");
+const productList = document.getElementById("product-list");
+const productMessage = document.getElementById("product-message");
 
-let allProducts = [];
-let comparisonProducts = [];
-let cart = [];
+let currentProducts = [];
 
-// BASIC HELPERS
-
-function makeElement(tag, className = "", content = "") {
-    const element = document.createElement(tag);
-    element.className = className;
-    element.textContent = content;
-    return element;
-}
-
-function productEmoji(product) {
-    const name = (product.name || "").toLowerCase();
-
-    if (name.includes("phone") || name.includes("galaxy") ||
-        name.includes("iphone")) return "📱";
-
-    if (name.includes("laptop")) return "💻";
-    if (name.includes("headphone")) return "🎧";
-    if (name.includes("watch")) return "⌚";
-
-    return "🛍️";
-}
-
-async function apiRequest(url, options = {}) {
-    const response = await fetch(url, options);
-
-    const data = await response.json();
-
-    if (!response.ok) {
-        throw new Error(
-            data.message || data.error || "Request failed"
-        );
+// API request function
+async function apiRequest(endpoint, options = {}) {
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {})
     }
+  });
 
-    return data;
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(data.error || data.message || "Request failed");
+  }
+
+  return data;
 }
 
-// 1. PRODUCT SEARCH
+// Get products from API response
+function getProducts(data) {
+  if (Array.isArray(data)) return data;
 
+  return data.products ||
+    data.results ||
+    data.items ||
+    data.data ||
+    [];
+}
+
+// Product details
+function productId(product) {
+  return product.product_id || product.id || "";
+}
+
+function productName(product) {
+  return product.name || product.product_name || product.title || "Unnamed product";
+}
+
+function productPrice(product) {
+  return Number(product.price || product.product_price || 0);
+}
+
+function formatPrice(value) {
+  return "₹" + Number(value || 0).toLocaleString("en-IN");
+}
+
+// Safe HTML display
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;"
+  })[character]);
+}
+
+function escapeJS(value) {
+  return String(value ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+function showMessage(message) {
+  productMessage.textContent = message;
+}
+
+// 1. LOAD PRODUCTS
+async function loadProducts() {
+  productList.innerHTML = "<p>Loading products...</p>";
+
+  try {
+    const data = await apiRequest("/products");
+    currentProducts = getProducts(data);
+    displayProducts(currentProducts);
+    loadCategories();
+  } catch (error) {
+    productList.innerHTML =
+      "<p>Unable to load products. Check whether the backend is running.</p>";
+    showMessage(error.message);
+  }
+}
+
+// 2. DISPLAY PRODUCTS
+function displayProducts(products) {
+  currentProducts = products;
+
+  document.getElementById("result-count").textContent =
+    `${products.length} product(s) found`;
+
+  if (!products.length) {
+    productList.innerHTML = "<p>No products found.</p>";
+    return;
+  }
+
+  productList.innerHTML = products.map(product => {
+    const id = productId(product);
+    const name = productName(product);
+    const price = productPrice(product);
+    const category = product.category || "Product";
+    const description = product.description || "Explore product details.";
+
+    return `
+      <div class="product-card">
+        <div class="product-top">
+          <span class="product-category">${escapeHTML(category)}</span>
+          <span class="product-id">${escapeHTML(id)}</span>
+        </div>
+
+        <h3>${escapeHTML(name)}</h3>
+        <p class="product-description">${escapeHTML(description)}</p>
+
+        <div class="product-price">${formatPrice(price)}</div>
+
+        <div class="product-actions">
+          <button class="small-button"
+            onclick="viewTrust('${escapeJS(id)}')">
+            Trust Details
+          </button>
+
+          <button class="small-button"
+            onclick="checkStock('${escapeJS(id)}')">
+            Check Stock
+          </button>
+
+          <button class="primary-button"
+            onclick="addToCart('${escapeJS(id)}')">
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    `;
+  }).join("");
+}
+
+// 3. PRODUCT SEARCH
 async function searchProducts() {
-    const keyword = searchInput.value.trim();
+  const keyword = document.getElementById("search-input").value.trim();
 
-    if (!keyword) {
-        resultMessage.textContent = "Please enter a product name.";
-        productList.replaceChildren();
-        return;
-    }
+  if (!keyword) {
+    loadProducts();
+    return;
+  }
 
-    searchButton.disabled = true;
-    searchButton.textContent = "Searching...";
+  try {
+    const data = await apiRequest(
+      `/search?keyword=${encodeURIComponent(keyword)}`
+    );
 
-    try {
-        const products = await apiRequest(
-            `${API_URL}/search?keyword=${encodeURIComponent(keyword)}`
-        );
-
-        if (!Array.isArray(products)) {
-            throw new Error("Unexpected product response from server.");
-        }
-
-        allProducts = products;
-        renderProducts(allProducts);
-
-        resultMessage.textContent =
-            `${allProducts.length} products found for "${keyword}".`;
-
-    } catch (error) {
-        productList.replaceChildren();
-        resultMessage.textContent = error.message;
-        console.error(error);
-
-    } finally {
-        searchButton.disabled = false;
-        searchButton.textContent = "Search";
-    }
+    displayProducts(getProducts(data));
+    showMessage(`Search results for ${keyword}`);
+  } catch (error) {
+    showMessage(error.message);
+  }
 }
 
-searchButton.addEventListener("click", searchProducts);
+// 4. BUDGET FILTER
+async function filterByBudget() {
+  const amount = document.getElementById("budget-input").value;
 
-searchInput.addEventListener("keydown", event => {
+  if (!amount || Number(amount) <= 0) {
+    showMessage("Enter a valid budget.");
+    return;
+  }
+
+  try {
+    const data = await apiRequest(
+      `/budget?amount=${encodeURIComponent(amount)}`
+    );
+
+    displayProducts(getProducts(data));
+    showMessage(`Products within ${formatPrice(amount)}`);
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+// 5. CATEGORY FILTER
+async function filterByCategory() {
+  const category = document.getElementById("category-select").value;
+
+  if (!category) {
+    loadProducts();
+    return;
+  }
+
+  try {
+    const data = await apiRequest(
+      `/category?name=${encodeURIComponent(category)}`
+    );
+
+    displayProducts(getProducts(data));
+    showMessage(`Category: ${category}`);
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+// Load categories
+async function loadCategories() {
+  const select = document.getElementById("category-select");
+
+  try {
+    const data = await apiRequest("/categories");
+
+    let categories = Array.isArray(data)
+      ? data
+      : data.categories || [];
+
+    categories = categories.map(item =>
+      typeof item === "string" ? item : item.name || item.category
+    ).filter(Boolean);
+
+    select.innerHTML = '<option value="">All categories</option>';
+
+    categories.forEach(category => {
+      const option = document.createElement("option");
+      option.value = category;
+      option.textContent = category;
+      select.appendChild(option);
+    });
+  } catch (error) {
+    console.warn("Category loading:", error.message);
+  }
+}
+
+// 6. SORT PRODUCTS
+async function sortProducts() {
+  const order = document.getElementById("sort-select").value;
+
+  if (!order) {
+    loadProducts();
+    return;
+  }
+
+  try {
+    const data = await apiRequest(
+      `/sort?order=${encodeURIComponent(order)}`
+    );
+
+    displayProducts(getProducts(data));
+  } catch (error) {
+    showMessage(error.message);
+  }
+}
+
+// Apply filters
+async function applyFilters() {
+  const budget = document.getElementById("budget-input").value;
+  const category = document.getElementById("category-select").value;
+
+  if (budget) {
+    await filterByBudget();
+  } else if (category) {
+    await filterByCategory();
+  } else {
+    await loadProducts();
+  }
+
+  const order = document.getElementById("sort-select").value;
+
+  if (order) {
+    currentProducts.sort((a, b) =>
+      order === "low-to-high"
+        ? productPrice(a) - productPrice(b)
+        : productPrice(b) - productPrice(a)
+    );
+
+    displayProducts(currentProducts);
+  }
+}
+
+// 7. PRODUCT COMPARISON
+async function compareProducts() {
+  const ids = document.getElementById("compare-ids").value.trim();
+
+  if (!ids) {
+    alert("Enter product IDs separated by commas.");
+    return;
+  }
+
+  const result = document.getElementById("comparison-result");
+  result.innerHTML = "<p>Comparing products...</p>";
+
+  try {
+    const data = await apiRequest(
+      `/compare?ids=${encodeURIComponent(ids)}`
+    );
+
+    const products = getProducts(data);
+
+    if (!products.length) {
+      result.textContent = JSON.stringify(data, null, 2);
+      return;
+    }
+
+    result.innerHTML = `
+      <h3>Comparison Results</h3>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${products.map(product => `
+            <tr>
+              <td>${escapeHTML(productName(product))}</td>
+              <td>${formatPrice(productPrice(product))}</td>
+              <td>${escapeHTML(product.category || "—")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (error) {
+    result.textContent = error.message;
+  }
+}
+
+// 8. TRUST SCORE AND DETAILS
+async function viewTrust(id) {
+  document.getElementById("trust-product-id").value = id;
+
+  const result = document.getElementById("trust-result");
+  result.innerHTML = "<p>Loading trust information...</p>";
+
+  try {
+    const [scoreResult, sellerResult, reviewResult] =
+      await Promise.allSettled([
+        apiRequest(`/trust-score?product_id=${encodeURIComponent(id)}`),
+        apiRequest(`/seller?product_id=${encodeURIComponent(id)}`),
+        apiRequest(`/reviews?product_id=${encodeURIComponent(id)}`)
+      ]);
+
+    const scoreData = scoreResult.status === "fulfilled"
+      ? scoreResult.value : null;
+
+    const sellerData = sellerResult.status === "fulfilled"
+      ? sellerResult.value : null;
+
+    const reviewData = reviewResult.status === "fulfilled"
+      ? reviewResult.value : null;
+
+    const rawScore = scoreData?.trust_score ??
+      scoreData?.score ??
+      scoreData?.total_score;
+
+    const score = Number(rawScore);
+
+    const validScore = rawScore !== undefined &&
+      rawScore !== null &&
+      Number.isFinite(score) &&
+      score >= 0 &&
+      score <= 100;
+
+    const reviews = Array.isArray(reviewData)
+      ? reviewData
+      : reviewData?.reviews || [];
+
+    const seller = sellerData?.seller || sellerData || {};
+
+    result.innerHTML = `
+      <h3>Trust Information: ${escapeHTML(id)}</h3>
+
+      ${validScore ? `
+        <div class="score-display">
+          <div class="score-number">
+            ${score.toFixed(1)}<small>/100</small>
+          </div>
+
+          <div>
+            <strong>Product Trust Score</strong>
+            <p class="muted">Based on available prototype data.</p>
+          </div>
+        </div>
+
+        <div class="trust-bar">
+          <span style="width:${score}%"></span>
+        </div>
+      ` : "<p>Trust score is not available.</p>"}
+
+      <h3>Seller Information</h3>
+      <p><strong>Seller:</strong>
+        ${escapeHTML(seller.name || seller.seller_name || "Not available")}
+      </p>
+
+      <p><strong>Seller Rating:</strong>
+        ${escapeHTML(seller.rating ?? seller.seller_rating ?? "Not available")}
+      </p>
+
+      <p><strong>Verification:</strong>
+        ${escapeHTML(seller.verified ?? seller.is_verified ?? seller.verification_status ?? "Not available")}
+      </p>
+
+      <h3>Customer Reviews</h3>
+
+      ${reviews.length ? reviews.map(review => `
+        <p>
+          ★ ${escapeHTML(review.rating ?? "—")} -
+          ${escapeHTML(review.comment || review.review || review.text || "Review information")}
+        </p>
+      `).join("") : "<p>Review details are not available.</p>"}
+    `;
+
+    document.getElementById("trust").scrollIntoView({
+      behavior: "smooth"
+    });
+
+  } catch (error) {
+    result.textContent = error.message;
+  }
+}
+
+// Trust details search
+async function searchTrustDetails() {
+  const id = document.getElementById("trust-product-id").value.trim();
+
+  if (!id) {
+    alert("Enter a product ID.");
+    return;
+  }
+
+  await viewTrust(id);
+}
+
+// 9. INVENTORY CHECK
+async function checkStock(id) {
+  try {
+    const data = await apiRequest(
+      `/stock?product_id=${encodeURIComponent(id)}`
+    );
+
+    alert("Inventory Information:\n" + JSON.stringify(data, null, 2));
+  } catch (error) {
+    alert("Stock check failed: " + error.message);
+  }
+}
+
+// 10. ADD TO CART WITH CONFIRMATION
+async function addToCart(id) {
+  const product = currentProducts.find(
+    item => productId(item) === id
+  );
+
+  const name = product ? productName(product) : id;
+
+  const confirmed = window.confirm(
+    `Do you want to add ${name} to your cart?`
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await apiRequest("/cart/add", {
+      method: "POST",
+      body: JSON.stringify({
+        product_id: id,
+        quantity: 1
+      })
+    });
+
+    alert("Product added to cart.");
+    loadCart();
+
+  } catch (error) {
+    alert("Unable to add product: " + error.message);
+  }
+}
+
+// 11. VIEW CART
+async function loadCart() {
+  const container = document.getElementById("cart-result");
+
+  try {
+    const data = await apiRequest("/cart");
+    const items = getProducts(data);
+
+    document.getElementById("cart-count").textContent =
+      items.reduce(
+        (total, item) => total + Number(item.quantity || 1),
+        0
+      );
+
+    if (!items.length) {
+      container.innerHTML = "<p>Your cart is empty.</p>";
+      return;
+    }
+
+    const total = data.total ?? data.total_price ??
+      items.reduce(
+        (sum, item) =>
+          sum + productPrice(item) * Number(item.quantity || 1),
+        0
+      );
+
+    container.innerHTML = `
+      <h3>Your Selected Products</h3>
+
+      ${items.map(item => {
+        const id = productId(item);
+        const name = productName(item);
+        const quantity = Number(item.quantity || 1);
+
+        return `
+          <div class="cart-item">
+            <div>
+              <strong>${escapeHTML(name)}</strong>
+              <p>${escapeHTML(id)} · Quantity: ${quantity}</p>
+              <p>${formatPrice(productPrice(item) * quantity)}</p>
+            </div>
+
+            <button onclick="removeFromCart('${escapeJS(id)}')">
+              Remove
+            </button>
+          </div>
+        `;
+      }).join("")}
+
+      <p class="cart-total">Total: ${formatPrice(total)}</p>
+    `;
+
+  } catch (error) {
+    container.textContent = "Unable to load cart: " + error.message;
+  }
+}
+
+// 12. REMOVE FROM CART
+async function removeFromCart(id) {
+  const confirmed = window.confirm(
+    "Do you want to remove this product?"
+  );
+
+  if (!confirmed) return;
+
+  try {
+    await apiRequest("/cart/remove", {
+      method: "DELETE",
+      body: JSON.stringify({
+        product_id: id
+      })
+    });
+
+    alert("Product removed from cart.");
+    loadCart();
+
+  } catch (error) {
+    alert("Unable to remove product: " + error.message);
+  }
+}
+
+// BUTTON EVENT LISTENERS
+
+document.getElementById("search-btn")
+  .addEventListener("click", searchProducts);
+
+document.getElementById("search-input")
+  .addEventListener("keydown", event => {
     if (event.key === "Enter") searchProducts();
-});
-
-// 2. DISPLAY PRODUCT CARDS
-
-function renderProducts(products) {
-    productList.replaceChildren();
-
-    if (products.length === 0) {
-        productList.appendChild(
-            makeElement("p", "", "No products found.")
-        );
-        return;
-    }
-
-    products.forEach(product => {
-        const card = makeElement("div", "product-card");
-
-        card.appendChild(
-            makeElement("div", "product-image", productEmoji(product))
-        );
-
-        card.appendChild(
-            makeElement("h3", "", product.name || "Unnamed product")
-        );
-
-        card.appendChild(
-            makeElement("p", "", `Product ID: ${product.id}`)
-        );
-
-        card.appendChild(
-            makeElement("p", "", `Brand: ${product.brand || "N/A"}`)
-        );
-
-        card.appendChild(
-            makeElement("p", "product-price", `₹${product.price}`)
-        );
-
-        card.appendChild(
-            makeElement("p", "", `Rating: ${product.rating ?? "N/A"} / 5`)
-        );
-
-        const inStock = Number(product.stock) > 0;
-
-        card.appendChild(
-            makeElement(
-                "p",
-                inStock ? "stock-good" : "stock-bad",
-                inStock ? "✓ Available" : "✕ Out of stock"
-            )
-        );
-
-        // TRUST SCORE
-
-        const trustButton = makeElement(
-            "button",
-            "trust-button",
-            "🛡 Check Trust Score"
-        );
-
-        const trustResult = makeElement("div", "trust-result", "");
-        trustResult.hidden = true;
-
-        trustButton.addEventListener("click", async () => {
-            trustButton.disabled = true;
-            trustButton.textContent = "Calculating...";
-
-            try {
-                const data = await apiRequest(
-                    `${API_URL}/trust-score?product_id=${encodeURIComponent(product.id)}`
-                );
-
-                trustResult.hidden = false;
-                trustResult.textContent =
-                    `${data.name || product.name}: ${data.trust_score}/100`;
-
-            } catch (error) {
-                trustResult.hidden = false;
-                trustResult.textContent = error.message;
-
-            } finally {
-                trustButton.disabled = false;
-                trustButton.textContent = "🛡 Check Trust Score";
-            }
-        });
-
-        card.append(trustButton, trustResult);
-
-        // COMPARISON AND CART BUTTONS
-
-        const actions = makeElement("div", "product-actions");
-
-        const compareButton = makeElement(
-            "button",
-            "",
-            "⚖ Compare"
-        );
-
-        compareButton.addEventListener("click", () => {
-            addToComparison(product);
-        });
-
-        const cartButton = makeElement(
-            "button",
-            "",
-            "🛒 Add to Cart"
-        );
-
-        cartButton.addEventListener("click", () => {
-            addToCart(product);
-        });
-
-        actions.append(compareButton, cartButton);
-        card.appendChild(actions);
-
-        productList.appendChild(card);
-    });
-}
-
-// 3. BUDGET FILTER
-
-document.getElementById("budgetButton").addEventListener("click", () => {
-    const budgetInput = document.getElementById("budgetInput");
-    const budget = Number(budgetInput.value);
-
-    if (budgetInput.value.trim() === "" || budget < 0) {
-        resultMessage.textContent = "Enter a valid budget.";
-        return;
-    }
-
-    const filtered = allProducts.filter(
-        product => Number(product.price) <= budget
-    );
-
-    renderProducts(filtered);
-
-    resultMessage.textContent =
-        `${filtered.length} products available within ₹${budget}.`;
-});
-
-document.getElementById("clearButton").addEventListener("click", () => {
-    document.getElementById("budgetInput").value = "";
-    renderProducts(allProducts);
-
-    resultMessage.textContent =
-        `${allProducts.length} products displayed.`;
-});
-
-// 4. PRODUCT COMPARISON
-
-function addToComparison(product) {
-    if (comparisonProducts.some(p => p.id === product.id)) {
-        alert("This product is already selected.");
-        return;
-    }
-
-    if (comparisonProducts.length >= 3) {
-        alert("You can compare only three products at a time.");
-        return;
-    }
-
-    comparisonProducts.push(product);
-    renderComparison();
-}
-
-function renderComparison() {
-    const container = document.getElementById("comparisonContent");
-    container.replaceChildren();
-
-    if (comparisonProducts.length === 0) {
-        container.textContent = "Select products to compare.";
-        return;
-    }
-
-    const table = document.createElement("table");
-
-    const rows = [
-        ["Product", p => p.name],
-        ["Brand", p => p.brand],
-        ["Price", p => `₹${p.price}`],
-        ["Rating", p => `${p.rating} / 5`],
-        ["Stock", p => Number(p.stock) > 0 ? "Available" : "Out of stock"]
-    ];
-
-    rows.forEach(([label, getter]) => {
-        const tr = document.createElement("tr");
-        const heading = makeElement("th", "", label);
-        tr.appendChild(heading);
-
-        comparisonProducts.forEach(product => {
-            const cell = makeElement("td", "", getter(product));
-            tr.appendChild(cell);
-        });
-
-        table.appendChild(tr);
-    });
-
-    container.appendChild(table);
-
-    const clearButton = makeElement(
-        "button",
-        "light-button",
-        "Clear Comparison"
-    );
-
-    clearButton.addEventListener("click", () => {
-        comparisonProducts = [];
-        renderComparison();
-    });
-
-    container.appendChild(clearButton);
-}
-
-// 5. SHOPPING CART
-
-function addToCart(product) {
-    if (Number(product.stock) <= 0) {
-        alert("Sorry, this product is out of stock.");
-        return;
-    }
-
-    const existing = cart.find(item => item.id === product.id);
-
-    if (existing) {
-        existing.quantity++;
-    } else {
-        cart.push({ ...product, quantity: 1 });
-    }
-
-    renderCart();
-}
-
-function removeFromCart(productId) {
-    cart = cart.filter(item => item.id !== productId);
-    renderCart();
-}
-
-function renderCart() {
-    const container = document.getElementById("cartContent");
-    container.replaceChildren();
-
-    const count = cart.reduce(
-        (total, item) => total + item.quantity, 0
-    );
-
-    document.getElementById("cartCount").textContent = count;
-
-    if (cart.length === 0) {
-        container.textContent = "Your cart is empty.";
-        return;
-    }
-
-    let total = 0;
-
-    cart.forEach(item => {
-        const itemTotal = Number(item.price) * item.quantity;
-        total += itemTotal;
-
-        const row = makeElement("div", "cart-item");
-        const details = makeElement("div");
-
-        details.appendChild(
-            makeElement("strong", "", item.name)
-        );
-
-        details.appendChild(
-            makeElement("p", "", `₹${item.price} × ${item.quantity}`)
-        );
-
-        const removeButton = makeElement(
-            "button",
-            "remove-button",
-            "Remove"
-        );
-
-        removeButton.addEventListener("click", () => {
-            removeFromCart(item.id);
-        });
-
-        row.append(details, removeButton);
-        container.appendChild(row);
-    });
-
-    container.appendChild(
-        makeElement("p", "cart-total", `Total: ₹${total.toFixed(2)}`)
-    );
-}
-
-// 6. AI SHOPPING RECOMMENDATIONS
-
-const aiButton = document.getElementById("aiButton");
-
-aiButton.addEventListener("click", async () => {
-    const query = document.getElementById("aiQuery").value.trim();
-    const result = document.getElementById("aiResult");
-
-    if (!query) {
-        result.textContent = "Please enter your shopping requirements.";
-        return;
-    }
-
-    aiButton.disabled = true;
-    aiButton.textContent = "Finding products...";
-    result.textContent = "Searching for recommendations...";
-
-    try {
-        const data = await apiRequest(`${API_URL}/recommend`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ query })
-        });
-
-        result.replaceChildren();
-
-        result.appendChild(
-            makeElement("h2", "ai-heading", "🤖 Your Recommendations")
-        );
-
-        const recommendations = data.recommendations || [];
-
-        result.appendChild(
-            makeElement(
-                "p",
-                "ai-summary",
-                `${recommendations.length} matching products found.`
-            )
-        );
-
-        if (recommendations.length === 0) {
-            result.appendChild(
-                makeElement("p", "", "No matching products found.")
-            );
-            return;
-        }
-
-        const grid = makeElement("div", "ai-product-grid");
-
-        recommendations.forEach(product => {
-            const card = makeElement("div", "ai-product-card");
-
-            card.appendChild(
-                makeElement("div", "ai-product-icon", productEmoji(product))
-            );
-
-            card.appendChild(
-                makeElement("h3", "", product.name)
-            );
-
-            card.appendChild(
-                makeElement("p", "ai-price", `₹${product.price}`)
-            );
-
-            card.appendChild(
-                makeElement("p", "ai-detail", `Brand: ${product.brand || "N/A"}`)
-            );
-
-            card.appendChild(
-                makeElement("p", "ai-detail", `Rating: ${product.rating ?? "N/A"} / 5`)
-            );
-
-            card.appendChild(
-                makeElement(
-                    "p",
-                    Number(product.stock) > 0 ? "stock-good" : "stock-bad",
-                    Number(product.stock) > 0 ? "Available" : "Out of stock"
-                )
-            );
-
-            grid.appendChild(card);
-        });
-
-        result.appendChild(grid);
-
-    } catch (error) {
-        result.textContent = error.message;
-        console.error(error);
-
-    } finally {
-        aiButton.disabled = false;
-        aiButton.textContent = "Get AI Recommendations →";
-    }
-});
-
-renderCart();
-renderComparison();
-
-console.log("TRUSTBUY AI frontend initialized.");
+  });
+
+document.getElementById("show-all-btn")
+  .addEventListener("click", () => {
+    document.getElementById("search-input").value = "";
+    document.getElementById("budget-input").value = "";
+    document.getElementById("category-select").value = "";
+    document.getElementById("sort-select").value = "";
+    loadProducts();
+  });
+
+document.getElementById("filter-btn")
+  .addEventListener("click", applyFilters);
+
+document.getElementById("sort-select")
+  .addEventListener("change", sortProducts);
+
+document.getElementById("compare-btn")
+  .addEventListener("click", compareProducts);
+
+document.getElementById("trust-btn")
+  .addEventListener("click", searchTrustDetails);
+
+document.getElementById("refresh-cart-btn")
+  .addEventListener("click", loadCart);
+
+// START WEBSITE
+loadProducts();
+loadCart();
